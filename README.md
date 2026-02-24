@@ -4,8 +4,10 @@ A new Flutter project.
 
 ## Getting Started
 
-This is a mobile app that uses firebase authentication which is a backend-as-a-service (BaaS) that provides complete user authentication functionality.
-
+This project successfully implements a secure Flutter authentication system integrated with a modern, responsive dashboard using Firebase Auth. Today's development focused on 
+enhancing code stability and UI polish by migrating deprecated .withOpacity() methods to the current .withValues(alpha: ...) standard and resolving BoxBorder type mismatches 
+using Border.all for container decorations. Furthermore, robust null safety was established in the account details section using ternary logic to prevent crashes during 
+asynchronous Firebase state changes, resulting in an error-free "Problems" tab and a production-ready user experience.
 
 A few resources to get you started if this is your first Flutter project:
 
