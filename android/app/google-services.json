@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "875121348047",
+    "project_id": "authenticated-user-dashb-ab95b",
+    "storage_bucket": "authenticated-user-dashb-ab95b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:875121348047:android:4f9c83289d2d30470ed6ba",
+        "android_client_info": {
+          "package_name": "com.example.aunthenticated_user_dashboard"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC8AVk_5DWJU4rpvPjoemKdFXGZHvHFh_w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
