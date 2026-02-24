@@ -10,172 +10,164 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  // Form key for validation
   final _formKey = GlobalKey<FormState>();
-  
-  // Controllers for text fields
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  
-  // Loading state for button
   bool _isLoading = false;
-  
-  // Firebase Auth instance
   final _auth = FirebaseAuth.instance;
 
   @override
   void dispose() {
-    // IMPORTANT: Always dispose controllers to prevent memory leaks
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  // Email validation function
   String? _validateEmail(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Email is required';
-    }
-    // Simple regex for email format
+    if (value == null || value.isEmpty) return 'Email is required';
     final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-    if (!emailRegex.hasMatch(value)) {
-      return 'Enter a valid email address';
-    }
+    if (!emailRegex.hasMatch(value)) return 'Enter a valid email address';
     return null;
   }
 
-  // Password validation function
   String? _validatePassword(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Password is required';
-    }
-    if (value.length < 6) {
-      return 'Password must be at least 6 characters';
-    }
+    if (value == null || value.isEmpty) return 'Password is required';
+    if (value.length < 6) return 'Password must be at least 6 characters';
     return null;
   }
 
-  // Login function
   Future<void> _signIn() async {
-    // Validate form first
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+    if (!_formKey.currentState!.validate()) return;
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
-      // Attempt sign in with Firebase
       await _auth.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
-      // Success! AuthWrapper will automatically redirect to dashboard
-      
     } on FirebaseAuthException catch (e) {
-      // Handle specific Firebase errors [citation:1]
-      String errorMessage;
+      if (!mounted) return; // UI/UX: Prevents context errors if user navigates away
+
+      String errorMessage = 'Login failed: ${e.message}';
+      if (e.code == 'user-not-found') errorMessage = 'No user found with this email.';
+      if (e.code == 'wrong-password') errorMessage = 'Wrong password provided.';
       
-      if (e.code == 'user-not-found') {
-        errorMessage = 'No user found with this email.';
-      } else if (e.code == 'wrong-password') {
-        errorMessage = 'Wrong password provided.';
-      } else if (e.code == 'invalid-email') {
-        errorMessage = 'Invalid email format.';
-      } else {
-        errorMessage = 'Login failed: ${e.message}';
-      }
-      
-      // Show error to user
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage)),
-      );
-      
-    } catch (e) {
-      // Handle any other errors
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred: ${e.toString()}')),
+        SnackBar(
+          content: Text(errorMessage),
+          behavior: SnackBarBehavior.floating, // Professional floating style
+          backgroundColor: Colors.redAccent,
+        ),
       );
     } finally {
-      // Always stop loading indicator
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Sign In'),
+        title: const Text('Sign In', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.black,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Email field
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.email),
+      body: SingleChildScrollView( // Prevents overflow errors on small screens
+        child: Padding(
+          padding: const EdgeInsets.all(28.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const SizedBox(height: 40),
+                // Branding/Logo Section
+                const Icon(Icons.lock_person_rounded, size: 100, color: Colors.blueAccent),
+                const SizedBox(height: 20),
+                const Text(
+                  "Welcome Back",
+                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                 ),
-                keyboardType: TextInputType.emailAddress,
-                validator: _validateEmail,
-                enabled: !_isLoading, // Disable while loading
-              ),
-              const SizedBox(height: 16),
-              
-              // Password field
-              TextFormField(
-                controller: _passwordController,
-                decoration: const InputDecoration(
-                  labelText: 'Password',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock),
+                const Text("Sign in to continue your session", style: TextStyle(color: Colors.grey)),
+                const SizedBox(height: 50),
+
+                // Email Field
+                TextFormField(
+                  controller: _emailController,
+                  enabled: !_isLoading,
+                  decoration: InputDecoration(
+                    labelText: 'Email',
+                    hintText: 'user@example.com',
+                    prefixIcon: const Icon(Icons.email_outlined),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+                    filled: true,
+                    fillColor: Colors.grey[50],
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                  validator: _validateEmail,
                 ),
-                obscureText: true, // Hide password
-                validator: _validatePassword,
-                enabled: !_isLoading,
-              ),
-              const SizedBox(height: 24),
-              
-              // Sign In button
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _signIn,
-                  child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('Sign In', style: TextStyle(fontSize: 16)),
+                const SizedBox(height: 20),
+
+                // Password Field
+                TextFormField(
+                  controller: _passwordController,
+                  enabled: !_isLoading,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    prefixIcon: const Icon(Icons.lock_outline_rounded),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+                    filled: true,
+                    fillColor: Colors.grey[50],
+                  ),
+                  validator: _validatePassword,
                 ),
-              ),
-              const SizedBox(height: 16),
-              
-              // Link to Sign Up
-              TextButton(
-                onPressed: _isLoading
-                    ? null
-                    : () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const SignupScreen(),
-                          ),
-                        );
-                      },
-                child: const Text('Don\'t have an account? Sign Up'),
-              ),
-            ],
+                const SizedBox(height: 35),
+
+                // Sign In Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 55,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blueAccent,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                      elevation: 2,
+                    ),
+                    onPressed: _isLoading ? null : _signIn,
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          )
+                        : const Text('Sign In', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Link to Sign Up
+                TextButton(
+                  onPressed: _isLoading
+                      ? null
+                      : () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const SignupScreen()),
+                          );
+                        },
+                  child: const Text(
+                    'Don\'t have an account? Sign Up',
+                    style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
