@@ -4,7 +4,8 @@ A new Flutter project.
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+This is a mobile app that uses firebase authentication which is a backend-as-a-service (BaaS) that provides complete user authentication functionality.
+
 
 A few resources to get you started if this is your first Flutter project:
 
