@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'signup_screen.dart';
+import 'dashboard_screen.dart'; // IMPORTED: Required for navigation
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -36,30 +37,52 @@ class _LoginScreenState extends State<LoginScreen> {
     return null;
   }
 
+  // MODIFIED: Updated _signIn function to fix double-click and network lag
   Future<void> _signIn() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
     try {
+      // 1. Added a 15-second timeout to handle emulator network "cold starts"
       await _auth.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
+      ).timeout(const Duration(seconds: 15));
+
+      // 2. Success check
+      if (!mounted) return;
+
+      // 3. FIX: Immediate navigation to DashboardScreen
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const DashboardScreen()),
       );
+
     } on FirebaseAuthException catch (e) {
-      if (!mounted) return; // UI/UX: Prevents context errors if user navigates away
+      if (!mounted) return;
 
       String errorMessage = 'Login failed: ${e.message}';
       if (e.code == 'user-not-found') errorMessage = 'No user found with this email.';
       if (e.code == 'wrong-password') errorMessage = 'Wrong password provided.';
+      if (e.code == 'network-request-failed') errorMessage = 'Network error. Check your connection.';
       
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(errorMessage),
-          behavior: SnackBarBehavior.floating, // Professional floating style
+          behavior: SnackBarBehavior.floating,
           backgroundColor: Colors.redAccent,
         ),
       );
+    } catch (e) {
+      // Handles timeout or other non-Firebase errors
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Connection timed out. Please try again.'),
+            backgroundColor: Colors.orange,
+          )
+        );
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -76,7 +99,7 @@ class _LoginScreenState extends State<LoginScreen> {
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.black,
       ),
-      body: SingleChildScrollView( // Prevents overflow errors on small screens
+      body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(28.0),
           child: Form(
@@ -85,7 +108,6 @@ class _LoginScreenState extends State<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const SizedBox(height: 40),
-                // Branding/Logo Section
                 const Icon(Icons.lock_person_rounded, size: 100, color: Colors.blueAccent),
                 const SizedBox(height: 20),
                 const Text(
@@ -95,7 +117,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 const Text("Sign in to continue your session", style: TextStyle(color: Colors.grey)),
                 const SizedBox(height: 50),
 
-                // Email Field
                 TextFormField(
                   controller: _emailController,
                   enabled: !_isLoading,
@@ -112,7 +133,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                // Password Field
                 TextFormField(
                   controller: _passwordController,
                   enabled: !_isLoading,
@@ -128,7 +148,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 35),
 
-                // Sign In Button
                 SizedBox(
                   width: double.infinity,
                   height: 55,
@@ -151,7 +170,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                // Link to Sign Up
                 TextButton(
                   onPressed: _isLoading
                       ? null
