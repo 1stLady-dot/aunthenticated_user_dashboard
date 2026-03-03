@@ -49,10 +49,27 @@ class _SignupScreenState extends State<SignupScreen> {
     setState(() => _isLoading = true);
 
     try {
+      // 1. Create the user in Firebase
       await _auth.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
+
+      if (!mounted) return;
+
+      // 2. Show Success Message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Account created successfully!'),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+
+      // 3. Move back to AuthWrapper/Login
+      // AuthWrapper will detect the new user session and show the Dashboard
+      Navigator.pop(context);
+
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
       
@@ -61,6 +78,11 @@ class _SignupScreenState extends State<SignupScreen> {
         errorMessage = 'This email is already registered.';
       } else if (e.code == 'weak-password') {
         errorMessage = 'The password is too weak.';
+      } else if (e.code == 'operation-not-allowed') {
+        // This specific error helps debug Firebase Console settings
+        errorMessage = 'Email/Password sign-in is not enabled in Firebase Console.';
+      } else if (e.code == 'network-request-failed') {
+        errorMessage = 'Check your internet connection and try again.';
       }
       
       ScaffoldMessenger.of(context).showSnackBar(
@@ -73,7 +95,10 @@ class _SignupScreenState extends State<SignupScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred: ${e.toString()}')),
+        SnackBar(
+          content: Text('An error occurred: ${e.toString()}'),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -105,13 +130,15 @@ class _SignupScreenState extends State<SignupScreen> {
                   "Get Started",
                   style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                 ),
-                const Text("Create an account to access the dashboard", style: TextStyle(color: Colors.grey)),
+                const Text("Create an account to access the dashboard", 
+                    style: TextStyle(color: Colors.grey)),
                 const SizedBox(height: 40),
 
                 // Email field
                 TextFormField(
                   controller: _emailController,
                   enabled: !_isLoading,
+                  keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
                     labelText: 'Email',
                     prefixIcon: const Icon(Icons.email_outlined),
@@ -173,7 +200,8 @@ class _SignupScreenState extends State<SignupScreen> {
                             width: 20,
                             child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                           )
-                        : const Text('Register', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        : const Text('Register', 
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   ),
                 ),
                 const SizedBox(height: 16),
