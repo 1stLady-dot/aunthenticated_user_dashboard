@@ -1,3 +1,9 @@
+**Course:** Mobile Application Development (INFT 425)   
+**Instructor Guidance:** Kobbina Ewuul Nkechukwu Amoah   
+**Attribution:** This project was developed under the direct instruction and structured 
+guidance of the course instructor. All core features, implementation patterns, and 
+technical decisions reflect the curriculum and weekly activities of this course. 
+
 # aunthenticated_user_dashboard
 
 A new Flutter project.
